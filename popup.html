@@ -133,6 +133,33 @@
           <input type="range" id="input-scroll-limit" min="1" max="10" step="1" value="3" class="range-slider">
         </div>
       </section>
+
+      <!-- Single Tab Focus -->
+      <section class="section-title">Single Tab Focus</section>
+      <section class="controls-panel card">
+        <div class="control-row">
+          <div class="control-info">
+            <span class="control-label">Enable Tab Lock</span>
+            <span class="control-desc">Prevent switching tabs while reading</span>
+          </div>
+          <label class="switch toggle-switch">
+            <input type="checkbox" id="toggle-tab-lock">
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <div class="slider-group" id="focus-duration-group">
+          <div class="slider-header" style="margin-top: 12px;">
+            <span class="slider-label">Focus Duration</span>
+            <span class="slider-val" id="val-focus-duration">1 min</span>
+          </div>
+          <input type="range" id="input-focus-duration" min="1" max="10" step="1" value="1" class="range-slider">
+        </div>
+
+        <button class="lock-btn" id="btn-lock-tab">
+          <span class="lock-btn-icon">🔒</span> <span id="btn-lock-tab-text">Lock Current Tab</span>
+        </button>
+      </section>
     </main>
 
     <!-- Footer -->

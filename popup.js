@@ -23,6 +23,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const statBlocks = document.getElementById("stat-blocks");
   const btnResetStats = document.getElementById("btn-reset-stats");
 
+  // Tab Lock elements
+  const toggleTabLock = document.getElementById("toggle-tab-lock");
+  const inputFocusDuration = document.getElementById("input-focus-duration");
+  const valFocusDuration = document.getElementById("val-focus-duration");
+  const btnLockTab = document.getElementById("btn-lock-tab");
+  const btnLockTabText = document.getElementById("btn-lock-tab-text");
+
   const containerElement = document.querySelector(".container");
 
   // SVG Progress Ring Specs
@@ -56,11 +63,43 @@ document.addEventListener("DOMContentLoaded", () => {
       valPauseDelay.textContent = `${data.pauseDuration || 10} secs`;
       valScrollLimit.textContent = `${data.scrollLimit || 3} pages`;
 
+      // Update Tab Lock settings UI
+      toggleTabLock.checked = data.tabLockEnabled === true;
+      inputFocusDuration.value = data.focusDuration || 1;
+      valFocusDuration.textContent = `${data.focusDuration || 1} min${(data.focusDuration || 1) > 1 ? 's' : ''}`;
+
       // Master Enabled State Styling
       if (masterSwitch.checked) {
         containerElement.classList.remove("disabled-state");
       } else {
         containerElement.classList.add("disabled-state");
+      }
+
+      // Tab Lock Active State Styling
+      if (toggleTabLock.checked) {
+        containerElement.classList.remove("tab-lock-inactive");
+      } else {
+        containerElement.classList.add("tab-lock-inactive");
+      }
+
+      // Active lock countdown styling
+      const now = Date.now();
+      if (data.lockedTabId && data.lockedUntil && now < data.lockedUntil) {
+        const secondsLeft = Math.max(0, Math.round((data.lockedUntil - now) / 1000));
+        const m = Math.floor(secondsLeft / 60);
+        const s = secondsLeft % 60;
+        
+        btnLockTabText.textContent = `Locked (${m}:${s.toString().padStart(2, '0')})`;
+        btnLockTab.disabled = true;
+        btnLockTab.classList.add("locked");
+        toggleTabLock.disabled = true;
+        inputFocusDuration.disabled = true;
+      } else {
+        btnLockTabText.textContent = "Lock Current Tab";
+        btnLockTab.disabled = !toggleTabLock.checked;
+        btnLockTab.classList.remove("locked");
+        toggleTabLock.disabled = false;
+        inputFocusDuration.disabled = false;
       }
 
       // Update Stats
@@ -271,6 +310,47 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   inputScrollLimit.addEventListener("change", (e) => {
     saveSetting("scrollLimit", parseInt(e.target.value));
+  });
+
+  // Tab Lock Toggles & Sliders
+  toggleTabLock.addEventListener("change", (e) => saveSetting("tabLockEnabled", e.target.checked));
+
+  inputFocusDuration.addEventListener("input", (e) => {
+    valFocusDuration.textContent = `${e.target.value} min${e.target.value > 1 ? 's' : ''}`;
+  });
+  inputFocusDuration.addEventListener("change", (e) => {
+    saveSetting("focusDuration", parseInt(e.target.value));
+  });
+
+  // Lock Current Tab Button
+  btnLockTab.addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length === 0) return;
+      const activeTab = tabs[0];
+      const duration = parseInt(inputFocusDuration.value, 10) || 1;
+      const lockedUntil = Date.now() + duration * 60 * 1000;
+
+      chrome.storage.local.set({
+        lockedTabId: activeTab.id,
+        lockedUntil: lockedUntil
+      }, () => {
+        // Set alarm in background.js to turn it off when expired
+        chrome.runtime.sendMessage({ type: "SET_LOCK_ALARM", lockedUntil: lockedUntil });
+
+        // Dynamically inject the HUD to the current active tab
+        chrome.scripting.insertCSS({
+          target: { tabId: activeTab.id },
+          files: ["focus_hud.css"]
+        }).catch(err => console.error("Error inserting HUD CSS:", err));
+
+        chrome.scripting.executeScript({
+          target: { tabId: activeTab.id },
+          files: ["focus_hud.js"]
+        }).catch(err => console.error("Error executing HUD JS:", err));
+
+        loadData();
+      });
+    });
   });
 
   // Reset Stats Button

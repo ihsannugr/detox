@@ -11,7 +11,11 @@ const DEFAULT_SETTINGS = {
   timeSpentToday: 0,    // in seconds
   scrollCountToday: 0,  // raw pixels or pages scrolled
   lastResetDate: "",
-  totalBlockedActions: 0
+  totalBlockedActions: 0,
+  tabLockEnabled: false,
+  focusDuration: 1,
+  lockedTabId: null,
+  lockedUntil: null
 };
 
 // Initialize settings on install
@@ -60,6 +64,25 @@ let activeXTabs = new Set();
 
 // Handle messages from content scripts and popups
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "SET_LOCK_ALARM") {
+    chrome.alarms.create("tabLockAlarm", { when: message.lockedUntil });
+    sendResponse({ status: "alarm_set" });
+    return true;
+  }
+
+  if (message.type === "SCROLL_TO_BOTTOM_UNLOCKED") {
+    chrome.alarms.clear("tabLockAlarm");
+    chrome.storage.local.set({ lockedTabId: null, lockedUntil: null }, () => {
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach((tab) => {
+          chrome.tabs.sendMessage(tab.id, { type: "TAB_LOCK_RELEASED", reason: "scroll" }).catch(err => {});
+        });
+      });
+    });
+    sendResponse({ status: "unlocked_scroll" });
+    return true;
+  }
+
   // Always verify daily reset first
   checkDailyReset(() => {
     if (message.type === "HEARTBEAT") {
@@ -118,3 +141,61 @@ function notifyTimeUp() {
     });
   });
 }
+
+// Tab Lock Enforcement and Handlers
+
+// Alarm listener to release lock when timer expires
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "tabLockAlarm") {
+    chrome.storage.local.set({ lockedTabId: null, lockedUntil: null }, () => {
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach((tab) => {
+          chrome.tabs.sendMessage(tab.id, { type: "TAB_LOCK_RELEASED", reason: "timer" }).catch(err => {});
+        });
+      });
+    });
+  }
+});
+
+// Force active tab back to locked tab if trying to switch away
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  chrome.storage.local.get(["tabLockEnabled", "lockedTabId", "lockedUntil"], (data) => {
+    if (!data.tabLockEnabled) return;
+    const now = Date.now();
+    if (data.lockedTabId && data.lockedUntil && now < data.lockedUntil) {
+      if (activeInfo.tabId !== data.lockedTabId) {
+        chrome.tabs.update(data.lockedTabId, { active: true });
+      }
+    }
+  });
+});
+
+// Clear lock state if the locked tab is closed by the user
+chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+  chrome.storage.local.get(["lockedTabId"], (data) => {
+    if (data.lockedTabId === tabId) {
+      chrome.alarms.clear("tabLockAlarm");
+      chrome.storage.local.set({ lockedTabId: null, lockedUntil: null });
+    }
+  });
+});
+
+// Re-inject HUD if the locked tab is reloaded or navigated while active
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === "complete") {
+    chrome.storage.local.get(["tabLockEnabled", "lockedTabId", "lockedUntil"], (data) => {
+      if (data.tabLockEnabled && data.lockedTabId === tabId && data.lockedUntil && Date.now() < data.lockedUntil) {
+        chrome.scripting.insertCSS({
+          target: { tabId: tabId },
+          files: ["focus_hud.css"]
+        }).catch(err => {});
+        
+        chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          files: ["focus_hud.js"]
+        }).catch(err => {});
+      }
+    });
+  }
+});
+

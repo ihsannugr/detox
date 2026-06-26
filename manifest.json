@@ -5,7 +5,10 @@
   "description": "Break the X (Twitter) doomscroll loop. Features mindful pauses, scroll limits, custom UI cleanup, and daily time limits.",
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "activeTab",
+    "scripting",
+    "alarms"
   ],
   "host_permissions": [
     "*://*.x.com/*",

@@ -1,0 +1,118 @@
+/* Single Tab Focus HUD & Toast Styles */
+
+#detoxx-focus-hud {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483647; /* Ensure it is above all webpage elements */
+  background: rgba(11, 15, 25, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.1);
+  padding: 12px 20px;
+  border-radius: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 210px;
+  transform: translateY(20px) scale(0.95);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  pointer-events: none; /* Make it click-through to not block web elements */
+}
+
+#detoxx-focus-hud.active {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.detoxx-hud-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.detoxx-hud-icon {
+  font-size: 16px;
+  animation: detoxx-pulse-glow 2s infinite ease-in-out;
+}
+
+.detoxx-hud-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #a78bfa;
+  flex: 1;
+}
+
+.detoxx-hud-timer {
+  font-size: 15px;
+  font-weight: 800;
+  font-family: monospace;
+  color: #ffffff;
+}
+
+.detoxx-hud-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.detoxx-hud-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6 0%, #10b981 100%);
+  width: 100%;
+  transition: width 1s linear;
+}
+
+/* Floating Completion Toast */
+#detoxx-focus-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translate(-50%, -20px);
+  z-index: 2147483647;
+  background: rgba(16, 185, 129, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+  padding: 14px 28px;
+  border-radius: 50px;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+  pointer-events: none;
+}
+
+#detoxx-focus-toast.active {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+#detoxx-focus-toast .detoxx-toast-icon {
+  font-size: 16px;
+}
+
+@keyframes detoxx-pulse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(139, 92, 246, 0.4));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.8));
+    transform: scale(1.1);
+  }
+}
