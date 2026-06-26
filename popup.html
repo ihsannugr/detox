@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DetoX Dashboard</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo-area">
+        <span class="logo-icon"></span>
+        <h1 class="logo-text">Deto<span class="accent">X</span></h1>
+      </div>
+      <div class="master-control">
+        <label class="switch">
+          <input type="checkbox" id="master-switch" checked>
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </header>
+
+    <!-- Content Area (Scrollable) -->
+    <main>
+      <!-- Time Limit Tracker Dial -->
+      <section class="dial-section">
+        <div class="dial-container">
+          <svg class="progress-ring" width="120" height="120">
+            <circle class="progress-ring__circle-bg" stroke="rgba(255, 255, 255, 0.05)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+            <circle class="progress-ring__circle" id="progress-circle" stroke="url(#gradient)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#10B981" />
+                <stop offset="100%" stop-color="#8B5CF6" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="dial-label">
+            <span class="dial-time" id="dial-time-display">0m</span>
+            <span class="dial-limit" id="dial-limit-display">of 15m</span>
+          </div>
+        </div>
+        <div class="dial-status-text" id="status-message">Mindful browsing active</div>
+      </section>
+
+      <!-- Statistics Panel -->
+      <section class="stats-panel card">
+        <div class="stat-item">
+          <span class="stat-value" id="stat-scrolls">0.0</span>
+          <span class="stat-label">Pages Scrolled</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-blocks">0</span>
+          <span class="stat-label">Detox Triggers</span>
+        </div>
+      </section>
+
+      <!-- Configuration Toggles -->
+      <section class="section-title">Timeline Controls</section>
+      <section class="controls-panel card">
+        <div class="control-row">
+          <div class="control-info">
+            <span class="control-label">Hide "For You" Algorithmic Feed</span>
+            <span class="control-desc">Force content intent, block feed scroll</span>
+          </div>
+          <label class="switch toggle-switch">
+            <input type="checkbox" id="toggle-feed">
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <div class="control-row">
+          <div class="control-info">
+            <span class="control-label">Hide Right Sidebar Trends</span>
+            <span class="control-desc">Remove viral FOMO headlines</span>
+          </div>
+          <label class="switch toggle-switch">
+            <input type="checkbox" id="toggle-sidebar">
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <div class="control-row">
+          <div class="control-info">
+            <span class="control-label">Hide "Who to Follow"</span>
+            <span class="control-desc">Block recommended account spam</span>
+          </div>
+          <label class="switch toggle-switch">
+            <input type="checkbox" id="toggle-who">
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <div class="control-row">
+          <div class="control-info">
+            <span class="control-label">Hide Vanity Metrics</span>
+            <span class="control-desc">Remove like/retweet/view counts</span>
+          </div>
+          <label class="switch toggle-switch">
+            <input type="checkbox" id="toggle-metrics">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Settings Sliders -->
+      <section class="section-title">Mindful Limits</section>
+      <section class="settings-panel card">
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-label">Daily Time Limit</span>
+            <span class="slider-val" id="val-time-limit">15 mins</span>
+          </div>
+          <input type="range" id="input-time-limit" min="5" max="60" step="5" value="15" class="range-slider">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-label">Mindful Pause Delay</span>
+            <span class="slider-val" id="val-pause-delay">10 secs</span>
+          </div>
+          <input type="range" id="input-pause-delay" min="3" max="30" step="1" value="10" class="range-slider">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-label">Scroll Depth Limit</span>
+            <span class="slider-val" id="val-scroll-limit">3 pages</span>
+          </div>
+          <input type="range" id="input-scroll-limit" min="1" max="10" step="1" value="3" class="range-slider">
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-quote" id="footer-quote">
+        "The price of anything is the amount of life you exchange for it."
+      </div>
+      <button class="reset-btn" id="btn-reset-stats">Reset Today's Stats</button>
+    </footer>
+  </div>
+
+  <!-- Math Verification Modal -->
+  <div id="math-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>DetoX Verification</h3>
+      <p>Prove your focus! Solve this problem to proceed:</p>
+      <div class="math-question" id="popup-math-question">Preparing...</div>
+      <input type="number" id="popup-math-input" placeholder="Your answer" autocomplete="off">
+      <div id="popup-math-error" class="math-error hidden">Incorrect, try again!</div>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel-btn" id="popup-math-cancel">Cancel</button>
+        <button class="modal-btn verify-btn" id="popup-math-submit">Verify</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
