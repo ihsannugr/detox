@@ -157,6 +157,16 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 
+// Helper to force focus back to the locked tab, retrying if the tab strip is currently busy (e.g. during a click or drag event)
+function forceActiveTab(tabId) {
+  chrome.tabs.update(tabId, { active: true }, () => {
+    if (chrome.runtime.lastError) {
+      // Re-try in 50ms if the tab strip is locked/busy
+      setTimeout(() => forceActiveTab(tabId), 50);
+    }
+  });
+}
+
 // Force active tab back to locked tab if trying to switch away
 chrome.tabs.onActivated.addListener((activeInfo) => {
   chrome.storage.local.get(["tabLockEnabled", "lockedTabId", "lockedUntil"], (data) => {
@@ -164,7 +174,7 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
     const now = Date.now();
     if (data.lockedTabId && data.lockedUntil && now < data.lockedUntil) {
       if (activeInfo.tabId !== data.lockedTabId) {
-        chrome.tabs.update(data.lockedTabId, { active: true });
+        forceActiveTab(data.lockedTabId);
       }
     }
   });
